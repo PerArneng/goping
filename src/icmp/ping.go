@@ -1,8 +1,9 @@
 package icmp
 
-import ( 
-    "fmt"
-    "bytes"
+import (
+	"fmt"
+	"bytes"
+	"encoding/binary"
 )
 
 type PingHeader struct {
@@ -16,19 +17,26 @@ type PingMessage struct {
 	data []byte
 }
 
-func NewPingMessage(id uint16, sequenceNr uint16) *PingMessage {
+func NewPingMessage(id uint16, sequenceNr uint16, data []byte) *PingMessage {
 	msg := new(PingMessage)
 	msg.messageType = T_ECHO_REQUEST
-	msg.code = uint8(0)
+	msg.code = byte(0)
 	msg.checksum = uint16(0)
 	msg.id = id
 	msg.sequenceNumber = sequenceNr
+	msg.data = data
 	return msg
 }
 
-func (*PingMessage) Serialize() []byte {
-    buff := bytes.NewBuffer(new([]byte))
-    return nil
+func (msg *PingMessage) Serialize() []byte {
+	buff := bytes.NewBuffer([]byte{})
+	binary.Write(buff, binary.BigEndian, msg.messageType)
+	binary.Write(buff, binary.BigEndian, msg.code)
+	binary.Write(buff, binary.BigEndian, msg.checksum)
+	binary.Write(buff, binary.BigEndian, msg.id)
+	binary.Write(buff, binary.BigEndian, msg.sequenceNumber)
+	buff.Write(msg.data)
+	return buff.Bytes()
 }
 
 func Ping(hostName string, port int) {

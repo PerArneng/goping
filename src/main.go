@@ -1,13 +1,15 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"icmp"
+	"os"
 )
 
 func main() {
-	msg := icmp.NewPingMessage(0, 0)
-	fmt.Printf("%s\n", msg)
-    data := msg.Serialize()
-    data = data
+	msg := icmp.NewPingMessage(1235, 666, []byte{})
+	//fmt.Printf("%s\n", msg)
+	data := msg.Serialize()
+	data = data
+	os.Stdout.Write(data)
 }
