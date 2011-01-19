@@ -1,6 +1,9 @@
 package icmp
 
-import "fmt"
+import ( 
+    "fmt"
+    "bytes"
+)
 
 type PingHeader struct {
 	id             uint16
@@ -21,6 +24,11 @@ func NewPingMessage(id uint16, sequenceNr uint16) *PingMessage {
 	msg.id = id
 	msg.sequenceNumber = sequenceNr
 	return msg
+}
+
+func (*PingMessage) Serialize() []byte {
+    buff := bytes.NewBuffer(new([]byte))
+    return nil
 }
 
 func Ping(hostName string, port int) {

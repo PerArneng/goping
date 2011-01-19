@@ -8,4 +8,6 @@ import (
 func main() {
 	msg := icmp.NewPingMessage(0, 0)
 	fmt.Printf("%s\n", msg)
+    data := msg.Serialize()
+    data = data
 }
