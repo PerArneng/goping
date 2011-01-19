@@ -1,9 +1,11 @@
 package icmp
 
 import (
-	"fmt"
+	//"fmt"
 	"bytes"
 	"encoding/binary"
+	//"os"
+	"net"
 )
 
 type PingHeader struct {
@@ -12,33 +14,39 @@ type PingHeader struct {
 }
 
 type PingMessage struct {
-	ICMPHeader
 	PingHeader
-	data []byte
+	payload []byte
 }
 
-func NewPingMessage(id uint16, sequenceNr uint16, data []byte) *PingMessage {
+func NewPingMessage(id uint16, sequenceNr uint16, payload []byte) *PingMessage {
 	msg := new(PingMessage)
-	msg.messageType = T_ECHO_REQUEST
-	msg.code = byte(0)
-	msg.checksum = uint16(0)
 	msg.id = id
 	msg.sequenceNumber = sequenceNr
-	msg.data = data
+	msg.payload = payload
 	return msg
 }
 
 func (msg *PingMessage) Serialize() []byte {
 	buff := bytes.NewBuffer([]byte{})
-	binary.Write(buff, binary.BigEndian, msg.messageType)
-	binary.Write(buff, binary.BigEndian, msg.code)
-	binary.Write(buff, binary.BigEndian, msg.checksum)
 	binary.Write(buff, binary.BigEndian, msg.id)
 	binary.Write(buff, binary.BigEndian, msg.sequenceNumber)
-	buff.Write(msg.data)
+	buff.Write(msg.payload)
 	return buff.Bytes()
 }
 
-func Ping(hostName string, port int) {
-	fmt.Printf("Hello, World!\n")
+func Ping(hostName string, id uint16, sequence uint16, payload []byte) {
+
+	pingMsg := NewPingMessage(id, sequence, payload)
+	pingData := pingMsg.Serialize()
+
+	icmpMsg := NewICMPMessage(T_ECHO_REQUEST, byte(0), pingData)
+	icmpData := icmpMsg.Serialize()
+
+	udpAddresss, _ := net.ResolveUDPAddr(hostName)
+
+	udp, _ := net.DialUDP("udp", nil, udpAddresss)
+	udp.Write(icmpData)
+	udp.Close()
+	//os.Stdout.Write(icmpData)
+	//fmt.Printf("Hello, World!\n")
 }
