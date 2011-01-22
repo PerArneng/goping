@@ -1,10 +1,11 @@
 package main
 
 import (
-	//"fmt" "os"
+	//"fmt"
 	"icmp"
+	//"net"
 )
 
 func main() {
-	icmp.Ping("localhost", 1213, 56, []byte{})
+	icmp.Ping("127.0.0.1", 1213, 1, []byte{})
 }
