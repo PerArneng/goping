@@ -22,9 +22,9 @@ type PingClient struct {
 	icmpClient *ICMPClient
 }
 
-func NewPingClient(localAddr, remoteAddr *net.IPAddr) (*PingClient, os.Error) {
+func NewPingClient(localAddr *net.IPAddr) (*PingClient, os.Error) {
 	client := new(PingClient)
-	icmpClient, e := NewICMPClient(localAddr, remoteAddr)
+	icmpClient, e := NewICMPClient(localAddr)
 	if e != nil {
 		fmt.Printf("%s\n", e)
 		return nil, e
@@ -33,13 +33,19 @@ func NewPingClient(localAddr, remoteAddr *net.IPAddr) (*PingClient, os.Error) {
 	return client, nil
 }
 
-func (client *PingClient) Send(message *PingMessage) {
+func (client *PingClient) SendEchoRequestMessage(remoteAddr *net.IPAddr, message *PingMessage) {
 	pingData := message.Serialize()
 	icmpMessage := NewICMPMessage(T_ECHO_REQUEST, byte(0), pingData)
-	e := client.icmpClient.Send(icmpMessage)
-	if e != nil {
-		fmt.Printf("%s\n", e)
-	}
+	/*e :=*/ client.icmpClient.SendMessageTo(remoteAddr, icmpMessage)
+	//if e != nil {
+	//	fmt.Printf("%s\n", e)
+	//}
+}
+
+func (client *PingClient) SendEchoRequest(remoteAddr *net.IPAddr, id uint16,
+sequenceNumber uint16, payload []byte) {
+	msg := NewPingMessage(id, sequenceNumber, payload)
+	client.SendEchoRequestMessage(remoteAddr, msg)
 }
 
 func (client *PingClient) Close() {
@@ -64,11 +70,6 @@ func (msg *PingMessage) Serialize() []byte {
 
 func Ping(hostName string, id uint16, sequence uint16, payload []byte) os.Error {
 
-	pingMsg := NewPingMessage(id, sequence, payload)
-	pingData := pingMsg.Serialize()
-
-	icmpMsg := NewICMPMessage(T_ECHO_REQUEST, byte(0), pingData)
-
 	localAddr, e := net.ResolveIPAddr("0.0.0.0")
 	if e != nil {
 		fmt.Printf("%s\n", e)
@@ -81,13 +82,13 @@ func Ping(hostName string, id uint16, sequence uint16, payload []byte) os.Error 
 		return e
 	}
 
-	cl, e := NewICMPClient(localAddr, remoteAddr)
+	cl, e := NewPingClient(localAddr)
 	if e != nil {
 		fmt.Printf("%s\n", e)
 		return e
 	}
 
-	cl.Send(icmpMsg)
+	cl.SendEchoRequest(remoteAddr, id, sequence, payload)
 	cl.Close()
 
 	return nil

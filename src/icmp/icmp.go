@@ -25,15 +25,13 @@ type ICMPMessage struct {
 }
 
 type ICMPClient struct {
-	localAddr  *net.IPAddr
-	remoteAddr *net.IPAddr
-	conn       *net.IPConn
+	localAddr *net.IPAddr
+	conn      *net.IPConn
 }
 
-func NewICMPClient(localAddr, remoteAddr *net.IPAddr) (*ICMPClient, os.Error) {
+func NewICMPClient(localAddr *net.IPAddr) (*ICMPClient, os.Error) {
 	client := new(ICMPClient)
 	client.localAddr = localAddr
-	client.remoteAddr = remoteAddr
 	conn, e := net.ListenIP("ip4:icmp", localAddr)
 	if e != nil {
 		fmt.Printf("%s\n", e)
@@ -43,12 +41,18 @@ func NewICMPClient(localAddr, remoteAddr *net.IPAddr) (*ICMPClient, os.Error) {
 	return client, nil
 }
 
-func (client *ICMPClient) Send(message *ICMPMessage) {
-	cnt, e := client.conn.WriteToIP(message.Serialize(), client.remoteAddr)
+
+func (client *ICMPClient) SendMessageTo(remoteAddr *net.IPAddr, message *ICMPMessage) {
+	cnt, e := client.conn.WriteToIP(message.Serialize(), remoteAddr)
 	if e != nil {
 		fmt.Printf("%s\n", e)
 	}
 	fmt.Printf("%s\n", cnt)
+}
+
+func (client *ICMPClient) SendTo(remoteAddr *net.IPAddr, messageType byte, code byte, payload []byte) {
+	msg := NewICMPMessage(messageType, code, payload)
+	client.SendMessageTo(remoteAddr, msg)
 }
 
 func (client *ICMPClient) Close() {
